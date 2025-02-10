@@ -8,13 +8,15 @@ from nltk.tokenize import word_tokenize
 import re
 from scipy.stats import linregress, ks_2samp
 
-# True for saving, false for showing
-save_plots = True
 
-# Folder in which the plots will be saved
-# It should end in a slash
-# An empty string will save them in the current directory
-plot_save_adress = ""
+"""PREPROCESSING"""
+
+
+# We use the puntuation-symbols list from the string library
+# We add two types of punctuation that the corpus also has
+punctuation = list(punctuation)
+punctuation.append("``")
+punctuation.append("''")
 
 # Open the 10 files from the Gaelic corpus
 # A for-loop is used to avoid having to type all the adresses
@@ -29,32 +31,33 @@ t = open(f"corpus_ex1/ns10.txt", encoding="utf-8").read().split()
 text_raw_gaelic += t
 
 # We split the word-tag pairs by the "/" character
+# We ensure it's only words and no punctuation included in the token list
 # If they have a tag we check that it's not punctuation (tag X)
 # If it's not we add it to a list
 # We also add the words with no tag (they are actual words we checked)
 tokens_gaelic = []
 for i in text_raw_gaelic:
     t = i.split("/")
-    if len(t) == 2 and not t[1].lower().startswith("x"):
-        tokens_gaelic.append(t[0].lower())
-    elif len(t) != 2:
-        tokens_gaelic.append(t[0].lower())
+    if t[0] not in punctuation:
+        if len(t) == 2 and not t[1].lower().startswith("x"):
+            tokens_gaelic.append(t[0].lower())
+        elif len(t) != 2:
+            tokens_gaelic.append(t[0].lower())
 
 # Here we use the news texts in the Brown corpus from NLTK
 corpus_english = brown.raw(categories="news")
-
 # We eliminate all tags using regex and tokenize the text using NLTK
 text_raw_english = re.sub(r"/[^\s]+", "", corpus_english)
 tokens_english = word_tokenize(text_raw_english)
 
-# We use the puntuation-symbols list from the string library
-# We add two types of punctuation that the corpus also has
-# We make all words lower case and check that they are not punctuation
+# We make all words lower case and check that they are not punctuation or numbers
 # We make a list
-punctuation = list(punctuation)
-punctuation.append("``")
-punctuation.append("''")
-tokens_english = [w.lower() for w in tokens_english if w not in punctuation]
+tokens_english = [
+    w.lower() for w in tokens_english if w not in punctuation and w != range(0 - 10)
+]
+
+
+"""CALCULATING DATA"""
 
 
 # This function will take the tokens of a corpus and the name (for the plot)
@@ -84,7 +87,7 @@ def calculate_zipf(words, name, exclude_len1=False):
             length_freq[length] = 0
         length_freq[length] += freq
 
-    # We convert both lengths and frequencyes to numpy arrays
+    # We convert both lengths and frequencies to numpy arrays
     lengths = np.array(list(length_freq.keys()))
     frequencies = np.array(list(length_freq.values()))
 
@@ -113,11 +116,7 @@ def calculate_zipf(words, name, exclude_len1=False):
     plt.ylabel("Log10(Frequency)")
     plt.legend()
     plt.grid(True)
-    if save_plots:
-        plt.savefig(f"{plot_save_adress}Length_Frequency_{name}.png")
-    else:
-        plt.show()
-    plt.close()
+    plt.show()
 
     # We return a dictionary with different values that we calculated
     # To be able to use them later
@@ -134,7 +133,7 @@ def calculate_zipf(words, name, exclude_len1=False):
 
 # This function takes as parameters two dictionaries with corpus values
 # Calculated using the calculate_zipf() function
-# And also the names of the two corpora for  outputs
+# And also the names of the two corpora for outputs
 # It compares and outputs information about the behaviour of the corpora
 def compare_corpora(corpus1_stats, corpus2_stats, name1="Corpus 1", name2="Corpus 2"):
 
@@ -145,10 +144,10 @@ def compare_corpora(corpus1_stats, corpus2_stats, name1="Corpus 1", name2="Corpu
     # Compare the slopes of the linear regressions
     print(f"Slope (shorter words more frequent):")
     print(
-        f"    {name1}: {corpus1_stats['slope']:.2f}, p-value: {corpus1_stats["p_value_regression"]:.4f}"
+        f"    {name1}: {corpus1_stats['slope']:.2f}, p-value: {corpus1_stats['p_value_regression']:.4f}"
     )
     print(
-        f"    {name2}: {corpus2_stats['slope']:.2f}, p-value: {corpus2_stats["p_value_regression"]:.4f}"
+        f"    {name2}: {corpus2_stats['slope']:.2f}, p-value: {corpus2_stats['p_value_regression']:.4f}"
     )
     print("→ More negative slope means stronger Zipf's Law effect.\n")
 
