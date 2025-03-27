@@ -1,5 +1,5 @@
-# NLP-Exercise-1
-Python file and corpus for the exercise 1 in the NLP course for the Masters in Theoretical and Applied Linguistics of Pompeu Fabra University.
+# Zipf's Abbreviation Law
+These are the Python file and Gaelic corpus for the exercise 1 in the NLP course for the Masters in Theoretical and Applied Linguistics of Pompeu Fabra University. The code takes two corpora and compares them in regards to Zipf's Law of Abbreviation
 
 To run the Python file you must have the folder with the Gaelic corpus textfiles in the same directory. 
 
